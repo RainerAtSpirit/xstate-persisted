@@ -5,7 +5,7 @@ import { kv } from '@vercel/kv'
 
 const STATE_ID = 'STATE_ID'
 
-export const getState = cache(async (id: string) => {
+const getState = cache(async (id: string) => {
   const state = await kv.json.get(id)
   const persistedState = JSON.parse(state.persistedState)
 
@@ -120,7 +120,7 @@ actor.subscribe({
 })
 actor.start()
 
-export async function sendAction(formData: FormData) {
+async function sendAction(formData: FormData) {
   'use server'
   const type = formData.get('type') as string
   const nextEvent = { type }
