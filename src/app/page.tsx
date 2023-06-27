@@ -4,7 +4,7 @@ import { cache } from 'react'
 import { promises as fs } from 'fs';
 
 const STATE_ID = 'STATE_ID'
-const FILENAME = './persistedState.json';
+const FILENAME = '/tmp/persistedState.json';
 
 async function getState(){
   let persistedState
