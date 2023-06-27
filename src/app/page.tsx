@@ -1,16 +1,22 @@
 import { createMachine, interpret } from 'xstate'
 import { revalidatePath } from 'next/cache'
 import { cache } from 'react'
-import { kv } from '@vercel/kv'
+import { promises as fs } from 'fs';
 
 const STATE_ID = 'STATE_ID'
+const FILENAME = './src/app/persistedState.json';
 
-const getState = cache(async (id: string) => {
-  const state = await kv.json.get(id)
-  const persistedState = JSON.parse(state.persistedState)
-
-  return persistedState || undefined
-})
+async function getState(){
+  let persistedState
+  try {
+    persistedState = JSON.parse(await fs.readFile(FILENAME, 'utf8'));
+  } catch (e) {
+    console.log('No persistedState found.');
+    persistedState = undefined;
+  }
+  console.log('persistedStated', persistedState)
+  return persistedState
+}
 
 const donutMachine = createMachine({
   id: 'donut',
@@ -89,13 +95,7 @@ const donutMachine = createMachine({
   },
 })
 
-let restoredState: any
-try {
-  restoredState = await getState(STATE_ID)
-} catch (e) {
-  console.log('No persisted state found.')
-  restoredState = undefined
-}
+let restoredState: any = await getState()
 
 const actor = interpret(donutMachine, {
   state: restoredState,
@@ -110,12 +110,7 @@ actor.subscribe({
     )
 
     const persistedState = JSON.stringify(actor.getPersistedState())
-
-    await kv.json.set(STATE_ID, '$', {
-      persistedState,
-    })
-
-    // console.log('persistedState', persistedState)
+    await fs.writeFile(FILENAME, persistedState);
   },
 })
 actor.start()
